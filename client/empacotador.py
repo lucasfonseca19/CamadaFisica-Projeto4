@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def empacotador(dados, tipo_dados):
     """
     Função que empacota os dados de entrada em datagramas.
@@ -22,19 +23,36 @@ def empacotador(dados, tipo_dados):
     with open(dados, 'rb') as f:
         dados = f.read()
         tamanho = len(dados)
-        num_pacotes = int(np.ceil(tamanho/114))
+        num_pacotes = int(np.ceil(tamanho / 114))
         restante = tamanho // 114
         if restante > 0:
             num_pacotes += 1
         lista_de_pacotes = []
 
-
-
-
+    h12 = b"\xAA\xAA"
+    eod = b"\xAA\xBB\xCC\xDD"
+    head = b""
+    payload = b""
 
     if tipo_dados == 1:
         # Handshake de início
-        pass
+        # Tipo de mensagem
+        head += b"\x01"
+        # Livre
+        head += h12
+        # Número total de pacotes do arquivo
+        head += b"\x01"
+        # Número do pacote sendo enviado
+        head += b"\x01"
+        # id do arquivo
+        head += b"\xAA"
+        # h6
+        head += h12
+        # h7
+        head += h12
+        # CRC
+        head += h12
+        head += h12
     elif tipo_dados == 2:
         # Handshake de resposta
         pass
@@ -52,3 +70,7 @@ def empacotador(dados, tipo_dados):
         pass
     else:
         pass
+
+    return head + payload + eod
+
+print(empacotador("teste.txt", 1))
