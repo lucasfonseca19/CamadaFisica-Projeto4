@@ -1,6 +1,6 @@
 import numpy as np
 
-def empacotar(dados, tipo_dados):
+def empacotador(dados, tipo_dados):
     """
     Função que empacota os dados de entrada em datagramas.
     Arquitetura:
