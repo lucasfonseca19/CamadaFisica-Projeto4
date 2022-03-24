@@ -24,6 +24,25 @@ import numpy as np
 #serialName = "/dev/tty.usbmodem1411" # Mac    (variacao de)
 serialName = "COM4"                  # Windows(variacao de)
 
+"""
+    Função que empacota os dados de entrada em datagramas.
+    Arquitetura:
+    Head (10 bytes):
+        -h0 → tipo de mensagem
+        -h1 → livre
+        -h2 → livre
+        -h3 → número total de pacotes do arquivo
+        -h4 → número do pacote sendo enviado
+        -h5 → Se tipo == Handshake, id do arquivo
+              Se tipo == dados, tamanho do payload
+        -h6 → pacote solicitado para recomeço quando há erro no envio
+        -h7 → último pacote recebido com sucesso
+        -h8 e h9 → CRC, ou Cyclic Redundancy Check
+    Payload(entre 0 e 114 bytes)
+    EOP (4 bytes):
+        0xAA 0xBB 0xCC 0xDD
+"""
+
 def main():
     try:
         #declaramos um objeto do tipo enlace com o nome "com". Essa é a camada inferior à aplicação. Observe que um parametro
@@ -33,73 +52,62 @@ def main():
 
         # Ativa comunicacao. Inicia os threads e a comunicação seiral
         server.enable()
+        IMAGEM = b''
+        Ocioso = True
+        id_server=b'\xaa'
+        
+        msgtipo2 = b'\x02\x00\x00\x01\x01'+id_server+b'\x00\x00\x00\x00'+ b'\xAA\xBB\xCC\xDD'
+        numPckg = msgtipo2[3]
+        while Ocioso:
+            Hs,nRx=server.getData(14)
+            if Hs[0] == 1:
+                #tipo de mensagem recebido e 1
+                if Hs[5] == int.from_bytes(id_server,byteorder='little'):
+                    #se mensagem e para o server certo
+                    Ocioso=False
 
-        # --------------------- HANDSHAKE --------------------- #
-        handshakepkg,_nrx = server.getData(14)
-        print(handshakepkg)
-        server.sendData(handshakepkg)
-        print('handshake resposta enviado')
+            time.sleep(1)
+            print("recebeu msg errada")
+        
+        if Ocioso==False:
+            server.sendData(msgtipo2)
+            cont = 1
+        
 
-        #---------------------RECEBENDO IMAGEM---------------------#
-        IMAGEM = b""
-        first_head, nRx = server.getData(10)
-        print(first_head[2])
-        size_payload = first_head[2]
-        numero_de_pacotes = first_head[1]
-        # Caso a imagem seja menor que o payload de um pacote, então não precisaremos
-        # entrar na lógica de ‘loop’ de recebimento de pacotes.
-        if size_payload < 114:
-            msgAndEOP, nRx = server.getData(size_payload+4)
+        while cont<=numPckg:
+            numDoPckg=cont
+            timer1 = 0
+            timer2 = 0
+            msgT3Head,nRx = server.getData(10)
+            if msgT3Head[0] != 3:
+                while timer2 < 20:
+                    time.sleep(1)
+                    timer2+=1
+                    #IMPLEMENTAR
+                    #Quando msgrecebida nao for t3
+            tamanhopayload = msgT3Head[5]
+            numDoPckgAtual = msgT3Head[4]
             
-            IMAGEM += msgAndEOP
-            #salvar em um arquivo
-        else:
-            # Caso a imagem seja maior que o payload de um pacote, então precisaremos
-            # entrar na lógica de ‘loop’ de recebimento de pacotes.
-            # Salva o payload do primeiro pacote em uma variável que será usada para
-            # concatenar os demais payloads, resultando em uma imagem completa.
-            primeiro_payload, nRx = server.getData(size_payload)
-            IMAGEM += primeiro_payload
-            # Iremos agora pegar mais 4 ‘bytes’ para saber e verificar se são o EOP.
-            primeiro_EOP, nRx = server.getData(4)
-            if primeiro_EOP == b'\xEE\x23\x4C\xA9':
-                print("primeiro enviado")
-            else:
-                print("Envio incorreto")
-                sys.exit()
-            # Agora iremos receber os demais pacotes.
-            pacote_atual = 2
-            pacote_anterior = 1
-            for i in range(2,numero_de_pacotes):
-                head, nRx = server.getData(10)
-                tamanho_payload = head[2]
-                pacote_atual = head[0]
-                print(pacote_atual)
-                try:
-                    payload, nRx = server.getData(tamanho_payload)
-                except:
-                    print("tamanho do payload errado")
-                    
-                IMAGEM += payload
-                EOP, nRx = server.getData(4)
-                # Iremos agora verificar se o numero do pacote atual é igual 1 mais o numero do pacote anterior.
-                # Se não for, então houve um erro.
-                if pacote_atual != pacote_anterior+1:
-                    print("Erro no envio")
-                    sys.exit()
+            payload,nRx = server.getData(tamanhopayload)
+            sEOP,nRx = server.getData(4)
 
-                pacote_anterior = pacote_atual
-                if EOP != b'\xEE\x23\x4C\xA9':
-                    print("EOP incorreto e tamanho do payload incorreto")
-                    sys.exit()
+            if sEOP != b'\xAA\xBB\xCC\xDD' or numDoPckgAtual != numDoPckg:
+                print("Mensagem deu ruim e vai ser enviado msg t6")
+                #IMPLEMENTAR MSG T6
 
-                server.sendData(handshakepkg)
-            
-            print(IMAGEM)
+            msgtipo4 = b''
+            server.sendData(msgtipo4)
+            cont+=1
+                
 
-            f = open("imagem.jpg", "wb")
-            f.write(IMAGEM)
-            f.close()
+
+
+
+
+
+        f = open("imagem.jpg", "wb")
+        f.write(IMAGEM)
+        f.close()
 
 
         # Encerra comunicação
