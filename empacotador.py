@@ -23,13 +23,7 @@ def empacotador(tipo_dados, pacote_error, ultimo_pacote):
     """
     ####### ATENÇÃO:
     ####### SUBSTITUIR dados PELO ENDEREÇO DO ARQUIVO A SER ENVIADO
-    with open(dados, 'rb') as f:
-        dados = f.read()
-        tamanho = len(dados)
-        num_pacotes = int(np.ceil(tamanho / 114))
-        restante = tamanho // 114
-        if restante > 0:
-            num_pacotes += 1
+    
     
     head = b""
     eod = b"\xAA\xBB\xCC\xDD"
@@ -41,6 +35,13 @@ def empacotador(tipo_dados, pacote_error, ultimo_pacote):
     
     
     if tipo_dados == 1:
+        with open(dados, 'rb') as f:
+            dados = f.read()
+        tamanho = len(dados)
+        num_pacotes = int(np.ceil(tamanho / 114))
+        restante = tamanho // 114
+        if restante > 0:
+            num_pacotes += 1
         head = b'\x01\x00\x00'+num_pacotes+'\x01'+id_server+b'\x00\x00\x00\x00'
         pacote = head + payload + eod
         lista_pacotes.append(pacote)
@@ -50,6 +51,13 @@ def empacotador(tipo_dados, pacote_error, ultimo_pacote):
         pacote = head + payload + eod
         lista_pacotes.append(pacote)
     elif tipo_dados == 3:
+        with open(dados, 'rb') as f:
+            dados = f.read()
+        tamanho = len(dados)
+        num_pacotes = int(np.ceil(tamanho / 114))
+        restante = tamanho // 114
+        if restante > 0:
+            num_pacotes += 1
         # envio de dados
         for i in range(num_pacotes):
             payload = dados[i*114:(i+1)*114]
