@@ -13,6 +13,7 @@ import sys
 from enlaceServer import *
 import time
 import numpy as np
+from empacotador import empacotador
 
 # voce deverá descomentar e configurar a porta com através da qual ira fazer comunicaçao
 #   para saber a sua porta, execute no terminal :
@@ -48,66 +49,124 @@ def main():
         #declaramos um objeto do tipo enlace com o nome "com". Essa é a camada inferior à aplicação. Observe que um parametro
         #para declarar esse objeto é o nome da porta.
         server = enlace('COM4')
-
+        timeout = False
+        
 
         # Ativa comunicacao. Inicia os threads e a comunicação seiral
         server.enable()
-        IMAGEM = b''
-        Ocioso = True
+        
         id_server=b'\xaa'
         
-        msgtipo2 = b'\x02\x00\x00\x01\x01'+id_server+b'\x00\x00\x00\x00'+ b'\xAA\xBB\xCC\xDD'
-        numPckg = msgtipo2[3]
-        while Ocioso:
+        msgtipo2 = empacotador(2,0,0)
+    
+        
+        IMAGEM = b''
+        initial = True
+
+        
+            
+        pacote_certo = False
+        while initial:
             Hs,nRx=server.getData(14)
             if Hs[0] == 1:
                 #tipo de mensagem recebido e 1
+                print(Hs[5])
                 if Hs[5] == int.from_bytes(id_server,byteorder='little'):
                     #se mensagem e para o server certo
-                    Ocioso=False
+                    initial = False
+                    
+                else:
+                    #nao e para mim
+                    time.sleep(1)
+                    print("recebeu msg errada")
+            else:
+                #nao e mensagem do tipo 1
+                time.sleep(1)
+                print("recebeu msg errada")
 
-            time.sleep(1)
-            print("recebeu msg errada")
-        
-        if Ocioso==False:
+        numDePacotes = Hs[3]
+
+        if initial==False:
             server.sendData(msgtipo2)
             cont = 1
-        
 
-        while cont<=numPckg:
-            numDoPckg=cont
-            timer1 = 0
-            timer2 = 0
-            msgT3Head,nRx = server.getData(10)
-            if msgT3Head[0] != 3:
-                while timer2 < 20:
-                    time.sleep(1)
-                    timer2+=1
-                    #IMPLEMENTAR
-                    #Quando msgrecebida nao for t3
-            tamanhopayload = msgT3Head[5]
-            numDoPckgAtual = msgT3Head[4]
+        reenvio = False 
+
+        while cont<=numDePacotes:
+            #Recebe mensagem t3
+            msgtipo6 = empacotador(6,cont,cont-1)
+            msgtipo5 = empacotador(5,0,0)
+            server.rx.timer1 = time.time()
+
+            if not reenvio:
+                server.rx.timer2 = time.time()
             
-            payload,nRx = server.getData(tamanhopayload)
-            sEOP,nRx = server.getData(4)
+            headert3,nRx = server.getData(10)
+            if nRx == 1:
+                #Deu timeout quando tentava pegar o header
+                if headert3[0] == 1:
+                    #timer1 timeout
+                    server.sendData(msgtipo6)
+                    reenvio = True
+                if headert3[0] == 2:
+                    #timer2 timeout
+                    server.sendData(msgtipo5)
+                    print("Erro de timeout mais de 20s")
+                    break
+            else:
+                size_payload = headert3[5] 
+                payloadt3, nRx2 = server.getData(size_payload)
+                if nRx2 == 1:
+                    # deu timeout quando tentava pegar o payload
+                    if payloadt3[0] == 1:
+                        # timer1 timeout
+                        server.sendData(msgtipo6)
+                        reenvio = True
+                    if payloadt3[0] == 2:
+                        # timer2 timeout
+                        server.sendData(msgtipo5)
+                        print("Erro de timeout mais de 20s")
+                        break
+                else:
+                    eop, nRx3 = server.getData(4)
+                    if nRx3 == 1:
+                        #deu timeout quando tentava pegar o eop
+                        if eop[0] == 1:
+                            #timer1 timeout
+                            server.sendData(msgtipo6)
+                            reenvio = True
+                        if eop[0] == 2:
+                            #timer2 timeout
+                            server.sendData(msgtipo5)
+                            print("Erro de timeout mais de 20s")
+                            break
+                    else:
+                        #nao deu timeout em nenhum
+                        reenvio = False
+                        if headert3[4] == cont:
+                            #pacote correto
+                            pacote_certo = True
 
-            if sEOP != b'\xAA\xBB\xCC\xDD' or numDoPckgAtual != numDoPckg:
-                print("Mensagem deu ruim e vai ser enviado msg t6")
-                #IMPLEMENTAR MSG T6
-
-            msgtipo4 = b''
-            server.sendData(msgtipo4)
-            cont+=1
-                
-
-
-
-
-
-
-        f = open("imagem.jpg", "wb")
-        f.write(IMAGEM)
-        f.close()
+                        if eop==b"\xAA\xBB\xCC\xDD" and pacote_certo:
+                            msgtipo4 = empacotador(4,0,cont)
+                            cont += 1
+                            IMAGEM+=payloadt3
+                            server.sendData(msgtipo4)
+                        else:
+                            if server.rx.getBufferLen()>0:
+                                print("tamanho do payload informado esta errado")
+                            if not pacote_certo:
+                                print("numero do pacote recebido esta fora de ordem")
+                            server.rx.clearBuffer()
+                            
+                            server.sendData(msgtipo6)
+        
+        if cont == numDePacotes:
+            
+            f = open("imagem.jpg", "wb")
+            f.write(IMAGEM)
+            f.close()
+            print("Foi enviado Imagem e ja esta no server")
 
 
         # Encerra comunicação
@@ -115,7 +174,6 @@ def main():
         print("Comunicação encerrada")
         print("-------------------------")
         server.disable()
-        
     except Exception as erro:
         print("ops! :-\\")
         print(erro)
