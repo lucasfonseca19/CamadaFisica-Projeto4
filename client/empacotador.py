@@ -24,49 +24,63 @@ def empacotador(tipo_dados, pacote_error, ultimo_pacote):
     ####### ATENÇÃO:
     ####### SUBSTITUIR dados PELO ENDEREÇO DO ARQUIVO A SER ENVIADO
     
+    endereco_dados = "client\pixel.png"
     
     head = b""
     eod = b"\xAA\xBB\xCC\xDD"
     payload = b""
     id_server = b"\xaa"
+    
     lista_pacotes = []
-    ultimo_pacote_bytes = bytes(ultimo_pacote)
-    pacote_error_bytes = bytes(pacote_error)
     
-    
+    ultimo_pacote_bytes = ultimo_pacote.to_bytes(1, byteorder='big')
+    pacote_error_bytes = pacote_error.to_bytes(1, byteorder='big')
+
     if tipo_dados == 1:
-        with open(dados, 'rb') as f:
+        with open(endereco_dados, 'rb') as f:
             dados = f.read()
-        tamanho = len(dados)
-        num_pacotes = int(np.ceil(tamanho / 114))
-        restante = tamanho // 114
-        if restante > 0:
-            num_pacotes += 1
-        head = b'\x01\x00\x00'+num_pacotes+'\x01'+id_server+b'\x00\x00\x00\x00'
-        pacote = head + payload + eod
-        lista_pacotes.append(pacote)
+            tamanho = len(dados)
+            num_pacotes = tamanho // 114
+            restante = tamanho - (num_pacotes * 114)
+            if restante > 0:
+                num_pacotes += 1
+            head = b'\x01\x00\x00'+ bytes([num_pacotes]) + b'\x01'+ id_server + b'\x00\x00\x00\x00'
+            pacote = head + payload + eod
+            lista_pacotes.append(pacote)
     elif tipo_dados == 2:
         # Handshake de resposta
         head = b'\x02\x00\x00\x01\x01'+id_server+b'\x00\x00\x00\x00'
         pacote = head + payload + eod
         lista_pacotes.append(pacote)
     elif tipo_dados == 3:
-        with open(dados, 'rb') as f:
-            dados = f.read()
+        with open(endereco_dados, 'rb') as f:
+             dados = f.read()
         tamanho = len(dados)
-        num_pacotes = int(np.ceil(tamanho / 114))
+        num_pacotes = int(tamanho / 114)
         restante = tamanho // 114
         if restante > 0:
             num_pacotes += 1
         # envio de dados
-        for i in range(num_pacotes):
-            payload = dados[i*114:(i+1)*114]
-            n_do_pacote = bytes(i+1)
-            n_de_pacotes = bytes(num_pacotes)
-            tamanho_payload = bytes(len(payload))    
-            head = b'\x03\x00\x00'+n_de_pacotes+n_do_pacote+tamanho_payload+pacote_error+ultimo_pacote_bytes+b'\x00\x00'
-            pacote = head+payload+eod
-            lista_pacotes.append(pacote)
+        # for i in range(num_pacotes):
+        #     payload = dados[i*114:(i+1)*114]
+        #     n_do_pacote = (i+1).to_bytes(1, byteorder='big')
+        #     n_de_pacotes = (num_pacotes).to_bytes(1, byteorder='big')
+            
+        #     tamanho_payload =(len(payload)).to_bytes(1, byteorder='big')  
+        #     head = b'\x03\x00\x00'+n_de_pacotes+n_do_pacote+tamanho_payload+pacote_error_bytes+ultimo_pacote_bytes+b'\x00\x00'
+        #     pacote = head+payload+eod
+        #     lista_pacotes.append(pacote)
+        pacote_atual = ultimo_pacote+1
+        payload = dados[pacote_atual*114:(pacote_atual+1)*114]
+        n_do_pacote = (pacote_atual).to_bytes(1, byteorder='big')
+        n_de_pacotes = (num_pacotes).to_bytes(1, byteorder='big')
+        tamanho_payload =(len(payload)).to_bytes(1, byteorder='big')
+        head = b'\x03\x00\x00'+n_de_pacotes+n_do_pacote+tamanho_payload+pacote_error_bytes+ultimo_pacote_bytes+b'\x00\x00'
+        pacote = head+payload+eod
+        lista_pacotes.append(pacote)
+    
+    
+    
     elif tipo_dados == 4:
         # confirmação de recebimento de dados
         head = b'\x04\x00\x00\x01\x01\x00\x00'+ultimo_pacote_bytes+b'\x00\x00'
@@ -75,7 +89,7 @@ def empacotador(tipo_dados, pacote_error, ultimo_pacote):
         pass
     elif tipo_dados == 5:
         # mensagem de timeout
-        head = b'\x05\x00\x00\x01\x01\x00\x00'+ultimo_pacote_bytes+b'\x00\x00'
+        head = b'\x05\x00\x00\x01\x01\x00\x00\x00'+ultimo_pacote_bytes+b'\x00\x00'
         pacote = head + payload + eod
         lista_pacotes.append(pacote)        
     elif tipo_dados == 6:
@@ -84,4 +98,3 @@ def empacotador(tipo_dados, pacote_error, ultimo_pacote):
         pacote = head + payload + eod
         lista_pacotes.append(pacote)
     return lista_pacotes
-

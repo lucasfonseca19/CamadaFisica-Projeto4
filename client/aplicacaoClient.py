@@ -13,6 +13,7 @@ import numpy as np
 import random as rd
 import sys
 from empacotador import *
+from logmaker import LogMaker
 #   python -m serial.tools.list_ports
 
 serialName = "COM8"
@@ -20,71 +21,107 @@ serialName = "COM8"
 
 def main():
     try:
+        
+        log1 = LogMaker("client",1)
+        
+        # ---------------------------- Estados e Contadores -------------------------- #
+        numero_de_pacotes_enviados = 0
+        # ------------------------------- Enable Porta ------------------------------- #
+        #region
         client = enlace(serialName)
-
-
         client.enable()
-
-        # Estrutura datagrama:
-        # |      HEAD      |     PAYLOAD   | EOP |
-        # ▭▭▭▭▭▭▭▭▭▭ ... ▭▭▭ ... ▭▭▭▭
-        #
-        # LIMITE DE ENVIO: 128 BYTES
-        # HEAD(10 BYTES) + PAYLOAD(0 - 114 BYTES) + EOP(2 BYTES))
-        # HEAD:
-        #      Número de pacote e o numero de pacotes totais
-        # DONE:
-        # Implementar Handshake
-        #   - Envio de uma mensagem para o servidor
-        #   - Recebimento de uma mensagem do servidor dentro de 5 segundos
-        #   - caso não receba, imprimir "Servidor Inativo.Tenta Novamente?S/N"
-        #   - caso o usuário responda "S", reenvie a mensagem de handshake
-        #   - caso o usuário responda "N", finalize a conexão
-        #   - caso o client receba uma mensagem do servidor, imprima "Conexão estabelecida"
-                                        #| IM do head                 |#EOD
-        pkg_hand_shake = b"\x01\x01\x00\xAA\xDD\xFF\xFF\xFF\xAA\xDD\xEE\x23\x4C\xA9"
-
+        #endregion
         # ------------------------- Enviando Handshake ------------------------ #
-        while True:
-            client.sendData(pkg_hand_shake)
-            time.sleep(0.1)
+        #region
+        handshake = empacotador(1,0,0)
+        handshake_resposta = empacotador(2,0,0)
+        print("Hanshake gerado e pronto pro envio")
+    
+        estado_handshake = True
+        while estado_handshake:
+            client.sendData(handshake)
+            
+            time.sleep(5)
             print("Handshake enviado")
             resposta, nRx = client.getData(14)
 
-            if resposta == pkg_hand_shake:
-                print("Handshake recebido")
-                break
+            if resposta == handshake_resposta:
+                print("Handshake de resposta recebido")
+                numero_de_pacotes_enviados += 1
+                estado_handshake = False
             elif resposta == False:
-                entrada = input("Servidor Inativo. Tenta Novamente? S/N\n")
-                if entrada == "N":
-                    print("Tchau")
-                    sys.exit(0)
-
-        # ------------------------- Mandando imagem ------------------------ #
-        lista_de_pacotes = empacotador("pixel.png")
-        for i in range(len(lista_de_pacotes)):
-            client.sendData(lista_de_pacotes[i])
+                print("Reenviando Handshake")
+        #endregion
+        # # # ------------------------- Mandando imagem ------------------------ #
+        
+        numero_de_pacotes_da_imagem = handshake[3]
+        print("Numero de pacotes da imagem: ", numero_de_pacotes_da_imagem)
+        
+        
+        pacote_anterior = 0
+        pacote_atual = 0
+        # for i in range(numero_de_pacotes_da_imagem):
+        #     empacotador(3,0,i)
+        #     pacote_anterior = pacote_atual
+        #     pacote_atual+=1
+            
+       empa
+        
+        
+        
+        
+        
+        
+        
+        
+        for i in range(numero_de_pacotes_da_imagem):
+            print("Enviando pacote: ", i+1)
+            client.sendData(i)
+            log1.write_line('enviando',3,len(i),i[4],numero_de_pacotes_da_imagem,i[8]+i[9])
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
             time.sleep(0.1)
-            resposta, Nrx = client.getData(14)
-            print("Pacote {} enviado".format(i+1))
-            if resposta == None:
-                print("Erro no envio do pacote:", i+1)
-                sys.exit(0)
+            numero_de_pacotes_enviados += 1
+            print("Pacote enviado")
+            time.sleep(0.1)
+            numero_de_pacotes_enviados += 1
+            print("Pacote enviado")
+        
+        # lista_de_pacotes = empacotador("pixel.png")
+        # for i in range(len(lista_de_pacotes)):
+        #     client.sendData(lista_de_pacotes[i])
+        #     time.sleep(0.1)
+        #     resposta, Nrx = client.getData(14)
+        #     print("Pacote {} enviado".format(i+1))
+        #     if resposta == None:
+        #         print("Erro no envio do pacote:", i+1)
+        #         sys.exit(0)
 
-        print("Imagem enviada")
-
-
-
-        #TODO:
-        # Checagem constante do recebimento da mensagem para prosseguir com o envio da seguinte
-        #TODO:
-
-        client.disable()
+        # print("Imagem enviada")
+        # client.disable()
 
     except Exception as erro:
         print("ops! :-\\")
         print(erro)
-        client.disable()
+        # client.disable()
 
 
 if __name__ == "__main__":
