@@ -1,100 +1,116 @@
 import numpy as np
-from pyrsistent import b
 
+def empacotadorClient(imagem):
+    '''
+        A funcao empacotadorClient vai ser responsavel por criar uma lista de lista
+        de bytes que vao ser enviados para server
 
-def empacotador(tipo_dados, pacote_error, ultimo_pacote):
-    """
-    Função que empacota os dados de entrada em datagramas.
-    Arquitetura:
-    Head (10 bytes):
-        -h0 → tipo de mensagem
-        -h1 → livre
-        -h2 → livre
-        -h3 → número total de pacotes do arquivo
-        -h4 → número do pacote sendo enviado
-        -h5 → Se tipo == Handshake, id do arquivo
-              Se tipo == dados, tamanho do payload
-        -h6 → pacote solicitado para recomeço quando há erro no envio
-        -h7 → último pacote recebido com sucesso
-        -h8 e h9 → CRC, ou Cyclic Redundancy Check
-    Payload(entre 0 e 114 bytes)
-    EOP (4 bytes):
-        0xAA 0xBB 0xCC 0xDD
-    """
-    ####### ATENÇÃO:
-    ####### SUBSTITUIR dados PELO ENDEREÇO DO ARQUIVO A SER ENVIADO
-    
-    endereco_dados = "client\pixel.png"
-    
-    head = b""
-    eod = b"\xAA\xBB\xCC\xDD"
-    payload = b""
-    id_server = b"\xaa"
-    
-    lista_pacotes = []
-    
-    ultimo_pacote_bytes = ultimo_pacote.to_bytes(1, byteorder='big')
-    pacote_error_bytes = pacote_error.to_bytes(1, byteorder='big')
+        h0 – tipo de mensagem
+        h1 – livre
+        h2 – livre
+        h3 – número total de pacotes do arquivo
+        h4 – número do pacote sendo enviado
+        h5 – se tipo for handshake:id do arquivo
+        h5 – se tipo for dados: tamanho do payload
+        h6 – pacote solicitado para recomeço quando a erro no envio.
+        h7 – último pacote recebido com sucesso.
+        h8 – h9 – CRC
+        PAYLOAD – variável entre 0 e 114 bytes. Reservado à transmissão dos arquivos.
+        EOP – 4 bytes: 0xAA 0xBB 0xCC 0xDD
+    '''
 
-    if tipo_dados == 1:
-        with open(endereco_dados, 'rb') as f:
-            dados = f.read()
-            tamanho = len(dados)
-            num_pacotes = tamanho // 114
-            restante = tamanho - (num_pacotes * 114)
-            if restante > 0:
-                num_pacotes += 1
-            head = b'\x01\x00\x00'+ bytes([num_pacotes]) + b'\x01'+ id_server + b'\x00\x00\x00\x00'
-            pacote = head + payload + eod
-            lista_pacotes.append(pacote)
-    elif tipo_dados == 2:
-        # Handshake de resposta
-        head = b'\x02\x00\x00\x01\x01'+id_server+b'\x00\x00\x00\x00'
-        pacote = head + payload + eod
-        lista_pacotes.append(pacote)
-    elif tipo_dados == 3:
-        with open(endereco_dados, 'rb') as f:
-             dados = f.read()
-        tamanho = len(dados)
-        num_pacotes = int(tamanho / 114)
-        restante = tamanho // 114
-        if restante > 0:
-            num_pacotes += 1
-        # envio de dados
-        # for i in range(num_pacotes):
-        #     payload = dados[i*114:(i+1)*114]
-        #     n_do_pacote = (i+1).to_bytes(1, byteorder='big')
-        #     n_de_pacotes = (num_pacotes).to_bytes(1, byteorder='big')
-            
-        #     tamanho_payload =(len(payload)).to_bytes(1, byteorder='big')  
-        #     head = b'\x03\x00\x00'+n_de_pacotes+n_do_pacote+tamanho_payload+pacote_error_bytes+ultimo_pacote_bytes+b'\x00\x00'
-        #     pacote = head+payload+eod
-        #     lista_pacotes.append(pacote)
-        pacote_atual = ultimo_pacote+1
-        payload = dados[pacote_atual*114:(pacote_atual+1)*114]
-        n_do_pacote = (pacote_atual).to_bytes(1, byteorder='big')
-        n_de_pacotes = (num_pacotes).to_bytes(1, byteorder='big')
-        tamanho_payload =(len(payload)).to_bytes(1, byteorder='big')
-        head = b'\x03\x00\x00'+n_de_pacotes+n_do_pacote+tamanho_payload+pacote_error_bytes+ultimo_pacote_bytes+b'\x00\x00'
-        pacote = head+payload+eod
-        lista_pacotes.append(pacote)
+    h1=b'\xFA'
+    h2=b'\xF6'
+    h6 =b'\x00'
+    h8=b'\xB9'
+    h9=b'\xE3'
+    EOP = b'\xAA\xBB\xCC\xDD'
+    listofpackages=[]
+    #primeiro pacote sera o HandShake
+    #Depois os outros
+    id_server = b'\xEE'
+
+    with open(imagem,'rb') as f:
+        img = f.read()
+        tamanho = len(img)
+        numero_de_pacotes = tamanho // 114
+        restante = tamanho - numero_de_pacotes
+        if restante>0:
+            numero_de_pacotes+=1
+        #append do handshake
+        h3 = bytes([numero_de_pacotes])
+
+        headerHS = b'\x01'+h1+h2+h3+b'\x00'+ id_server+h6+b'\x00'+ h8 + h9
+        heandshake = headerHS+EOP
+
+        listofpackages.append(np.asarray(heandshake))
+
+        for i in range(numero_de_pacotes):
+            payload = img[(i)*114:(i+1)*114]
+            h4 = bytes([i+1]) #numero do pacote
+            h5 = bytes([len(payload)]) #tamanho do payload
+            h7 = bytes([i]) #numero do ultimo pacote enviado
+            header = b'\x03'+h1+h2+h3+h4+h5+h6+h7+h8+h9
+            package = header+payload+EOP
+            listofpackages.append(np.asarray(package))
+
+    return listofpackages
+
+def pacote5():
+    header = b'\x05\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+    EOP = b'\xAA\xBB\xCC\xDD'
+    resposta = header+EOP
+    return np.asarray(resposta)
+
+def empacotadorServer(h0,h6,h7):
+    '''
+        A funcao empacotadorClient vai ser responsavel por criar uma lista de lista
+        de bytes que vao ser enviados para server
+
+        h0 – tipo de mensagem
+        h1 – livre
+        h2 – livre
+        h3 – número total de pacotes do arquivo
+        h4 – número do pacote sendo enviado
+        h5 – se tipo for handshake:id do arquivo
+        h5 – se tipo for dados: tamanho do payload
+        h6 – pacote solicitado para recomeço quando a erro no envio.
+        h7 – último pacote recebido com sucesso.
+        h8 – h9 – CRC
+        PAYLOAD – variável entre 0 e 114 bytes. Reservado à transmissão dos arquivos.
+        EOP – 4 bytes: 0xAA 0xBB 0xCC 0xDD
+
+        h0,h6 e h7 em numeros inteiros
+        para t2 h6 e h7 = 0;
+        para t4 h6 = 0;
+        para t6 h7 = 0;
+    '''
+
+    h1=b'\xFA'
+    h2=b'\xF6'
+    h3 = b'\x00'
+    h4 = b'\x00'
+    h5 = b'\x00'
+    h8=b'\xB9'
+    h9=b'\xE3'
+    h0_b = bytes([h0])
+    h6_b = bytes([h6])
+    h7_b = bytes([h7])
+    EOP = b'\xAA\xBB\xCC\xDD'
+
+    if h0 == 2:
+        #resposta ao heandshake (tipo 2)
+        header = h0_b + h1 + h2 + h3 + h4 + h5 + b'\x00' + b'\00' + h8 + h9
+        pacote = header + EOP
+    elif h0 == 4:
+        #resposta ao pacote 3 enviado pelo client
+        header = h0_b + h1 + h2 + h3 + h4 + h5 + b'\x00' + h7_b + h8 + h9
+        pacote = header + EOP
+    elif h0 == 6:
+        #resposta quando numero do pacote esperado pelo servidor for o errado
+        header = h0_b + h1 + h2 + h3 + h4 + h5 + h6_b + h7_b + h8 + h9
+        pacote = header + EOP
+
+    return np.asarray(pacote)
     
-    
-    
-    elif tipo_dados == 4:
-        # confirmação de recebimento de dados
-        head = b'\x04\x00\x00\x01\x01\x00\x00'+ultimo_pacote_bytes+b'\x00\x00'
-        pacote = head + payload + eod
-        lista_pacotes.append(pacote)
-        pass
-    elif tipo_dados == 5:
-        # mensagem de timeout
-        head = b'\x05\x00\x00\x01\x01\x00\x00\x00'+ultimo_pacote_bytes+b'\x00\x00'
-        pacote = head + payload + eod
-        lista_pacotes.append(pacote)        
-    elif tipo_dados == 6:
-        # mensagem de erro
-        head = b'\x06\x00\x00\x01\x01\x00' + pacote_error_bytes+ultimo_pacote_bytes+ b'\x00\x00'
-        pacote = head + payload + eod
-        lista_pacotes.append(pacote)
-    return lista_pacotes
+        

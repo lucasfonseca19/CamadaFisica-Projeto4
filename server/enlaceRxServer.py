@@ -12,8 +12,8 @@ import time
 
 # Threads
 import threading
-from empacotador import empacotador
-import settings
+from erro import TimerError
+
 # Class
 class RX(object):
   
@@ -23,14 +23,7 @@ class RX(object):
         self.threadStop  = False
         self.threadMutex = True
         self.READLEN     = 1024
-        self.timer1      = 0
-        self.timer2      = 0
-
-
-    def setTimer1(self):
         self.timer1 = 0
-    
-    def setTimer2(self):
         self.timer2 = 0
 
     def thread(self): 
@@ -77,28 +70,41 @@ class RX(object):
         self.threadResume()
         return(b)
 
+    def getNDataHS(self, size):
+        start_time = time.time()
+        seconds = 20
+        while (self.getBufferLen() < size):
+            current_time = time.time()
+            elapsed_time = current_time - start_time
+
+            if elapsed_time > seconds:
+                self.clearBuffer()
+                raise RuntimeError
+                
+            time.sleep(0.05)
+            
+        return (self.getBuffer(size))
+
     def getNData(self, size):
-        #Fazer um while que dura ate quando buffer for menor que tamanho
-        #timer1 e timer2 sao iniciados no loop cont<=NumdePacotes
-        #Se exceder timer2,retorna uma lista vazia para o valor de t3 e no aplicacaoServer fazer com que essa condicao pare o loop
-        #e seja enviado msgt6
-        #Se exceder timer1,retorna uma lista [4] para o valor de t3 e no aplicativoServer fazer com que essa condicao envie uma msg tipo4 porem
-        #nao acrescente valor ao cont,forcando um reenvio do client 
         
         while(self.getBufferLen() < size):
-            
             agora = time.time()
-            if self.timer1 != 0 and self.timer2 != 0:#ainda esta no HS
-                if agora - self.timer2 > 20:
-                    #timeout, envia menssagem tipo 5
-                    return [1]
-                if agora - self.timer1 > 2:
-                    #envia msg tipo 6
-                    return [2]
-            time.sleep(0.1)
+            print(f'diferenca de tempo = {agora - self.timer1}')
+            if agora-self.timer1>2:
+                #vai ativar erro
+                print("Ativa erro 1")
+                raise TimerError(timeout=1)
+            elif agora - self.timer2>20:
+                #vai ativar outro erro
+                print("Ativa erro 2")
+                raise TimerError(timeout=2)
+            time.sleep(0.05)
 
         return(self.getBuffer(size))
-        
+
+    
 
     def clearBuffer(self):
         self.buffer = b""
+
+

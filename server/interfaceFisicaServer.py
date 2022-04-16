@@ -88,3 +88,4 @@ class fisica(object):
         except :
             print("[ERRO] interfaceFisica, read, decode. buffer : {}".format(rxBufferValid))
             return(b"", 0)
+
