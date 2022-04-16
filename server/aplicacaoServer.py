@@ -15,6 +15,7 @@ import time
 import numpy as np
 from empacotador import empacotadorServer,pacote5
 from erro import TimerError
+import logmaker
 
 # voce deverá descomentar e configurar a porta com através da qual ira fazer comunicaçao
 #   para saber a sua porta, execute no terminal :
@@ -46,10 +47,10 @@ def main():
                 print("Recebeu mensagem t1 correta do cliente")
                 server.rx.clearBuffer()
             else:
-                print("recebeu mensagem do tipo errado ou de destinatario server diferente")
+                print("Recebeu mensagem do tipo errado ou de destinatario server diferente")
         except RuntimeError as erro:
             print(erro)
-            print("nao recebeu nada do cliente")
+            print("Não recebeu nada do cliente")
             time.sleep(1)
 
     msgtipo2 = empacotadorServer(h0=2,h6=0,h7=0)
@@ -58,7 +59,6 @@ def main():
     numPckg = Hs[3]
     Imagem_recebida = b''
     zerar2=True
-    print("Iniciando LOOP")
     pacotefive = pacote5()
     while cont<=numPckg:
         try:
@@ -91,16 +91,14 @@ def main():
                 print("t6 enviado")
                 
         except TimerError as erro:
-            print(f'erro {erro}')
             tipo,mensagem = erro.args
-            print(tipo)
             if tipo==1:
                 server.sendData(empacotadorServer(h0=4,h6=0,h7=cont))
-                print("deu timeout")
+                print("Excedeu o timer de 2s  o tempo de resposta do client")
                 zerar2 = False
             elif tipo==2:
                 server.sendData(pacotefive)
-                print("Timeout timer2")
+                print("Excedeu o timer de 20s o tempo de resposta do client")
                 break
             
 

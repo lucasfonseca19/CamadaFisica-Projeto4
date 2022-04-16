@@ -89,7 +89,6 @@ class RX(object):
         
         while(self.getBufferLen() < size):
             agora = time.time()
-            print(f'diferenca de tempo = {agora - self.timer1}')
             if agora-self.timer1>2:
                 #vai ativar erro
                 print("Ativa erro 1")

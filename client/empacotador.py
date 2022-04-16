@@ -108,7 +108,7 @@ def empacotadorServer(h0,h6,h7):
         pacote = header + EOP
     elif h0 == 6:
         #resposta quando numero do pacote esperado pelo servidor for o errado
-        header = h0_b + h1 + h2 + h3 + h4 + h5 + b'\x00' + h7_b + h8 + h9
+        header = h0_b + h1 + h2 + h3 + h4 + h5 + h6_b + h7_b + h8 + h9
         pacote = header + EOP
 
     return np.asarray(pacote)
