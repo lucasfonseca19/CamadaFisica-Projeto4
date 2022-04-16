@@ -1,0 +1,2 @@
+2022-04-16 15:42:27 / Buscando HandShake
+2022-04-16 15:42:47 / Timeout do HandShake

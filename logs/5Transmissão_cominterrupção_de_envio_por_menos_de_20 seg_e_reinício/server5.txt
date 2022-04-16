@@ -1,0 +1,22 @@
+2022-04-16 16:05:40 / receb / 1 / 14 /  /  / 
+2022-04-16 16:05:40 / envio / 2 / 14 /  /  / 
+2022-04-16 16:05:41 / receb / 3 / 128 / 1 / 5 / b'\xb9\xb3'
+2022-04-16 16:05:41 / envio / 4 / 14 /  /  / 
+2022-04-16 16:05:41 / receb / 3 / 128 / 2 / 5 / b'\xb9\xb3'
+2022-04-16 16:05:41 / envio / 4 / 14 /  /  / 
+2022-04-16 16:05:42 / receb / 3 / 128 / 3 / 5 / b'\xb9\xb3'
+2022-04-16 16:05:42 / envio / 4 / 14 /  /  / 
+2022-04-16 16:05:44 / envio / 4 / 14 /  /  / 
+2022-04-16 16:05:44 / Ausencia de resposta de pacote de dados com reenvio
+2022-04-16 16:05:46 / envio / 4 / 14 /  /  / 
+2022-04-16 16:05:46 / Ausencia de resposta de pacote de dados com reenvio
+2022-04-16 16:05:47 / receb / 3 / 128 / 3 / 5 / b'\xb9\xb3'
+2022-04-16 16:05:47 / envio / 6 / 14 /  /  / 
+2022-04-16 16:05:49 / envio / 4 / 14 /  /  / 
+2022-04-16 16:05:49 / Ausencia de resposta de pacote de dados com reenvio
+2022-04-16 16:05:51 / envio / 4 / 14 /  /  / 
+2022-04-16 16:05:51 / Ausencia de resposta de pacote de dados com reenvio
+2022-04-16 16:05:52 / receb / 3 / 128 / 4 / 5 / b'\xb9\xb3'
+2022-04-16 16:05:52 / envio / 4 / 14 /  /  / 
+2022-04-16 16:05:53 / receb / 3 / 48 / 5 / 5 / b'\xb9\xb3'
+2022-04-16 16:05:53 / envio / 4 / 14 /  /  / 

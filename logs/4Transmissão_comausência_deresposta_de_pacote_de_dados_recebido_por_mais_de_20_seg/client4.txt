@@ -1,0 +1,12 @@
+2022-04-16 15:56:07 / envio / 1 / 14 /  /  / 
+2022-04-16 15:56:07 / receb / 2 / 14 /  /  / 
+2022-04-16 15:56:07 / envio / 3 / 128 / 1 / 5 / b'\xb9\xb3'
+2022-04-16 15:56:08 / receb / 4 / 14 /  /  / 
+2022-04-16 15:56:08 / envio / 3 / 128 / 2 / 5 / b'\xb9\xb3'
+2022-04-16 15:56:13 / Ausencia de pacote de dados com reenvio
+2022-04-16 15:56:13 / envio / 3 / 128 / 2 / 5 / b'\xb9\xb3'
+2022-04-16 15:56:18 / Ausencia de pacote de dados com reenvio
+2022-04-16 15:56:18 / envio / 3 / 128 / 2 / 5 / b'\xb9\xb3'
+2022-04-16 15:56:23 / Ausencia de pacote de dados com reenvio
+2022-04-16 15:56:23 / envio / 3 / 128 / 2 / 5 / b'\xb9\xb3'
+2022-04-16 15:56:28 / Ausencia de resposta de pacote de dados

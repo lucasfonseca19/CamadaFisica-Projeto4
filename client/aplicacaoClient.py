@@ -37,36 +37,33 @@ def main():
         client.enable()
         inicia = False
         pacotefive = pacote5()
+        quebrou=False
         while not inicia:
             try:
                 print("enviando handshake")
                 client.sendData(all_pkgs[0])
-                log1.write_line("envio",1,14,"","","")
-                #log2.write_line("envio",1,14,"","","")
-                #log3.write_line("envio",1,14,"","","")
-                #log4.write_line("envio",1,14,"","","")
-                #log5.write_line("envio",1,14,"","","")
+                
+                log5.write_line("envio",1,14,"","","")
+                
                 # time.sleep(5)
                 resposta_t2,nRx = client.getDataHS(14)
                 if resposta_t2[0] == 2:
                     #recebeu mensagem t2
                     inicia = True
-                    log1.write_line("receb",2,14,"","","")
-                    #log2.write_line("envio",2,14,"","","")
-                    #log3.write_line("envio",2,14,"","","")
-                    #log4.write_line("envio",2,14,"","","")
-                    #log5.write_line("envio",2,14,"","","")
+                    log5.write_line("receb",2,14,"","","")
                     print("recebeu mensagem t2")
                 else:
                     print("recebeu mensagem de tipo errado")
             except RuntimeError as erro:
                 print("reenviando Handshake")
                 log3.write_ausencia("timeout de handshake")
+                quebrou=True
+                break
 
         cont=1
         numPck = len(all_pkgs)-1
         zerar2=True
-        while cont <= numPck:
+        while cont <= numPck and not quebrou:
             try:
                 print("enviando pacote")
                 client.sendData(all_pkgs[cont])
@@ -74,12 +71,8 @@ def main():
                 lista = list(bytes(a))
                 
                 
-                log1.write_line("envio",3,len(lista),cont,numPck,b"\xb9\xb3")
-                #log1.write_line("envio",3,len(lista),cont,numPck,b"\xb9\xb3")
-                #log2.write_line("envio",3,len(lista),cont,numPck,b"\xb9\xb3")
-                #log3.write_line("envio",3,len(lista),cont,numPck,b"\xb9\xb3")
-                #log4.write_line("envio",3,len(lista),cont,numPck,b"\xb9\xb3")
-                #log5.write_line("envio",3,len(lista),cont,numPck,b"\xb9\xb3")
+                log5.write_line("envio",3,len(lista),cont,numPck,b"\xb9\xb3")
+                
                 client.rx.timer1=time.time()
                 if zerar2:
                     client.rx.timer2=time.time()
@@ -90,14 +83,11 @@ def main():
                 if resposta[0] == 4:
                     #Recebeu mensagem 4
                     zerar2=True
-                    log1.write_line("receb",4,14,"","","")
-                    #log3.write_line("receb",4,14,"","","")
-                    #log4.write_line("receb",4,14,"","","")
-                    #log5.write_line("receb",4,14,"","","")
+                    log5.write_line("receb",4,14,"","","")
                     cont+=1
                 elif resposta[0]==6:
                     #recebeu mensagem 6
-                    log2.write_line("receb",6,14,"","","")
+                    log5.write_line("receb",6,14,"","","")
                     zerar2=True
                     cont = resposta[6]
                     print("msgt6")
@@ -110,7 +100,7 @@ def main():
                     print("reenviando pacote")
                     log5.write_ausencia("Ausência de pacote de dados com reenvio")
                 elif tipo==2:
-                    log4.write_ausencia("Ausência de resposta de pacote de dados")
+                    log5.write_ausencia("Ausência de resposta de pacote de dados")
                     print("Excedeu o limte de 20 segundos de espera")
                     client.sendData(pacotefive)
                     break
