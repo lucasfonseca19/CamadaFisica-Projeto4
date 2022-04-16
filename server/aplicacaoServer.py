@@ -50,6 +50,10 @@ def main():
             if Hs[0] == 1 and Hs[5] == id_server:
                 #recebeu mensagem t1
                 log1.write_line("receb",1,14,"","","")
+                # log2.write_line("receb",1,14,"","","")
+                # log3 vem no except
+                # log4.write_line("receb",1,14,"","","")
+                # log5.write_line("receb",1,14,"","","")
                 ocioso=False
                 print("Recebeu mensagem t1 correta do cliente")
                 server.rx.clearBuffer()
@@ -64,7 +68,12 @@ def main():
     msgtipo2 = empacotadorServer(h0=2,h6=0,h7=0)
     server.sendData(msgtipo2)
     log1.write_line("envio",2,14,"","","")
-    
+    # log1.write_line("envio",2,14,"","","")
+    # log2.write_line("envio",2,14,"","","")
+    # log3.write_line("envio",2,14,"","","")
+    # log4.write_line("envio",2,14,"","","")
+    # log5.write_line("envio",2,14,"","","")
+
     cont=1
     numPckg = Hs[3]
     Imagem_recebida = b''
@@ -90,6 +99,11 @@ def main():
                 pacotet4 = empacotadorServer(h0=4,h6=0,h7=cont)
                 server.sendData(pacotet4)
                 log1.write_line("envio",4,14,"","","")
+                #log1.write_line("envio",4,14,"","","")
+                #log2 vem no else
+                #log3.write_line("envio",4,14,"","","")
+                #log4.write_line("envio",4,14,"","","")
+                #log5.write_line("envio",4,14,"","","")
                 cont+=1
                 print("t4 enviado")
             else:

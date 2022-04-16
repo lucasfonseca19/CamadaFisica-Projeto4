@@ -42,12 +42,20 @@ def main():
                 print("enviando handshake")
                 client.sendData(all_pkgs[0])
                 log1.write_line("envio",1,14,"","","")
+                #log2.write_line("envio",1,14,"","","")
+                #log3.write_line("envio",1,14,"","","")
+                #log4.write_line("envio",1,14,"","","")
+                #log5.write_line("envio",1,14,"","","")
                 # time.sleep(5)
                 resposta_t2,nRx = client.getDataHS(14)
                 if resposta_t2[0] == 2:
                     #recebeu mensagem t2
                     inicia = True
                     log1.write_line("receb",2,14,"","","")
+                    #log2.write_line("envio",2,14,"","","")
+                    #log3.write_line("envio",2,14,"","","")
+                    #log4.write_line("envio",2,14,"","","")
+                    #log5.write_line("envio",2,14,"","","")
                     print("recebeu mensagem t2")
                 else:
                     print("recebeu mensagem de tipo errado")
@@ -67,7 +75,11 @@ def main():
                 
                 
                 log1.write_line("envio",3,len(lista),cont,numPck,b"\xb9\xb3")
-                
+                #log1.write_line("envio",3,len(lista),cont,numPck,b"\xb9\xb3")
+                #log2.write_line("envio",3,len(lista),cont,numPck,b"\xb9\xb3")
+                #log3.write_line("envio",3,len(lista),cont,numPck,b"\xb9\xb3")
+                #log4.write_line("envio",3,len(lista),cont,numPck,b"\xb9\xb3")
+                #log5.write_line("envio",3,len(lista),cont,numPck,b"\xb9\xb3")
                 client.rx.timer1=time.time()
                 if zerar2:
                     client.rx.timer2=time.time()
@@ -79,6 +91,9 @@ def main():
                     #Recebeu mensagem 4
                     zerar2=True
                     log1.write_line("receb",4,14,"","","")
+                    #log3.write_line("receb",4,14,"","","")
+                    #log4.write_line("receb",4,14,"","","")
+                    #log5.write_line("receb",4,14,"","","")
                     cont+=1
                 elif resposta[0]==6:
                     #recebeu mensagem 6
