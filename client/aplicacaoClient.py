@@ -62,8 +62,12 @@ def main():
             try:
                 print("enviando pacote")
                 client.sendData(all_pkgs[cont])
-                log1.write_line("envio",3,len(all_pkgs[cont]),cont,numPck,b"\xb9\xb3")
-                print(all_pkgs[cont])
+                a= all_pkgs[cont]
+                lista = list(bytes(a))
+                
+                
+                log1.write_line("envio",3,len(lista),cont,numPck,b"\xb9\xb3")
+                
                 client.rx.timer1=time.time()
                 if zerar2:
                     client.rx.timer2=time.time()
