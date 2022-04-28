@@ -9,6 +9,7 @@
 #esta é a camada superior, de aplicação do seu software de comunicação serial UART.
 #para acompanhar a execução e identificar erros, construa prints ao longo do código! 
 
+from crc import CrcCalculator, Crc16
 import sys
 from enlaceServer import *
 import time
@@ -32,7 +33,7 @@ def main():
     try:
         #declaramos um objeto do tipo enlace com o nome "com". Essa é a camada inferior à aplicação. Observe que um parametro
         #para declarar esse objeto é o nome da porta.
-        server = enlace('COM4')
+        server = enlace('COM9')
         # -------------------------- Criação de Objetos Log -------------------------- #
         log1 = logmaker.LogMaker("server", 1)
         log2 = logmaker.LogMaker("server", 2)
@@ -74,10 +75,12 @@ def main():
         if not quebrou:
             numPckg = Hs[3]
         else:
+            print("Quebrou")
             numPckg=0
         Imagem_recebida = b''
         zerar2=True
         pacotefive = pacote5()
+
         while cont<=numPckg and not quebrou:
             try:
                 server.rx.timer1=time.time()
@@ -88,6 +91,16 @@ def main():
                 header,nRx = server.getData(10)
                 n_pckg_recebido = header[4]
                 payload_size = header[5]
+                checksum_do_payload_enviado = header[8]+header[9] #inteiro
+                crc_calculator = CrcCalculator(Crc16.CCITT)
+                checksum_do_recebido = crc_calculator.calculate_checksum(payload) #inteiro
+                if checksum_do_recebido == checksum_do_payload_enviado:
+                    print("Deu certo")
+                    print("valores recebidos nos bytes h8 e h9: {}".format(checksum_do_payload_enviado))
+                    print("valor do checksum do payload que acabou de chegar no server: {}".format(checksum_do_recebido))
+                else:
+                    print("Nao deu certo")
+
                 payload,nRx = server.getData(payload_size)
                 eop,nRx = server.getData(4)
                 log5.write_line("receb",3,14+payload_size,n_pckg_recebido,numPckg,b"\xb9\xb3")
@@ -124,7 +137,7 @@ def main():
                     break
                 
 
-        if cont>=numPckg:
+        if cont>=numPckg and not quebrou:
             f = open("imagem.jpg", "wb")
             f.write(Imagem_recebida)
             f.close()

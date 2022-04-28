@@ -1,5 +1,5 @@
 import numpy as np
-
+from crc import CrcCalculator, Crc16
 def empacotadorClient(imagem):
     '''
         A funcao empacotadorClient vai ser responsavel por criar uma lista de lista
@@ -47,6 +47,13 @@ def empacotadorClient(imagem):
 
         for i in range(numero_de_pacotes):
             payload = img[(i)*114:(i+1)*114]
+
+            #logica do CRC
+            crc_calculator = CrcCalculator(Crc16.CCITT)
+            checksum = crc_calculator.calculate_checksum(payload)
+            h8_h9 = (checksum).to_bytes(2, byteorder='little') #CRC16
+            #Acabou logica do CRC
+
             h4 = bytes([i+1]) #numero do pacote
             h5 = bytes([len(payload)]) #tamanho do payload
             h7 = bytes([i]) #numero do ultimo pacote enviado
