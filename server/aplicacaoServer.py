@@ -91,9 +91,14 @@ def main():
                 header,nRx = server.getData(10)
                 n_pckg_recebido = header[4]
                 payload_size = header[5]
-                checksum_do_payload_enviado = header[8]+header[9] #inteiro
+                checksum_do_payload_enviado_em_bytes = header[8:10] #bytes
+                
+                checksum_do_payload_enviado = int.from_bytes(checksum_do_payload_enviado_em_bytes,'little')
+                payload,nRx = server.getData(payload_size)
                 crc_calculator = CrcCalculator(Crc16.CCITT)
                 checksum_do_recebido = crc_calculator.calculate_checksum(payload) #inteiro
+                print("valores recebidos nos bytes h8 e h9: {}".format(checksum_do_payload_enviado))
+                print("valor do checksum do payload que acabou de chegar no server: {}".format(checksum_do_recebido))
                 if checksum_do_recebido == checksum_do_payload_enviado:
                     print("Deu certo")
                     print("valores recebidos nos bytes h8 e h9: {}".format(checksum_do_payload_enviado))
@@ -101,7 +106,7 @@ def main():
                 else:
                     print("Nao deu certo")
 
-                payload,nRx = server.getData(payload_size)
+                
                 eop,nRx = server.getData(4)
                 log5.write_line("receb",3,14+payload_size,n_pckg_recebido,numPckg,b"\xb9\xb3")
                 if n_pckg_recebido == cont and eop == b'\xAA\xBB\xCC\xDD':
